@@ -2,14 +2,12 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-# URL of the Google Sheet CSV
 GSHEET_URL = "https://docs.google.com/spreadsheets/d/1R4IelEYRFWRhuJWX2eYxpQT3zdbIFVX3/export?format=csv&gid=818503085"
 
-@st.cache_data(ttl=3600)  # Cache the data for 1 hour to reduce sheet traffic
+@st.cache_data(ttl=3600)
 def load_and_clean_data(url=GSHEET_URL):
     df = pd.read_csv(url)
     
-    # 1. Clean Research Group names
     def clean_group(val):
         if pd.isna(val):
             return "No Registrado"
@@ -25,7 +23,6 @@ def load_and_clean_data(url=GSHEET_URL):
         
     df['Grupo de Investigación Clean'] = df['Grupo de Investigación'].apply(clean_group)
     
-    # 2. Clean Typology values
     def clean_typology(val):
         if pd.isna(val):
             return "No Registrado"
@@ -50,7 +47,6 @@ def load_and_clean_data(url=GSHEET_URL):
         
     df['Tipología Clean'] = df['Tipología'].apply(clean_typology)
     
-    # 3. Clean Subcategory values
     def clean_subcategory(val):
         if pd.isna(val):
             return "No Registrado"
@@ -71,7 +67,6 @@ def load_and_clean_data(url=GSHEET_URL):
         
     df['Subcategoría Clean'] = df['Subcategoría'].apply(clean_subcategory)
     
-    # 4. Clean State values
     def clean_state(val):
         if pd.isna(val):
             return "No Registrado"
@@ -90,7 +85,6 @@ def load_and_clean_data(url=GSHEET_URL):
         
     df['Estado Clean'] = df['Estado'].apply(clean_state)
     
-    # 5. Clean external URL links
     def clean_link(val):
         if pd.isna(val):
             return ""
@@ -103,10 +97,8 @@ def load_and_clean_data(url=GSHEET_URL):
         
     df['Enlace Clean'] = df['DOI / Link'].apply(clean_link)
     
-    # 6. Normalize publication years
     df['Año Clean'] = pd.to_numeric(df['Año'], errors='coerce').fillna(0).astype(int)
     
-    # 7. Aggregate all authors/directors
     def extract_authors(row):
         authors = []
         if pd.notna(row['Director / Investigador Principal']):
@@ -129,7 +121,6 @@ def load_and_clean_data(url=GSHEET_URL):
     df['Autores Lista'] = df['Autores Detalle'].apply(lambda x: list(dict.fromkeys([item[0] for item in x])))
     df['Autores Texto'] = df['Autores Lista'].apply(lambda x: ", ".join(x))
     
-    # Fill NAs
     df['Título'] = df['Título'].fillna("Sin Título Especificado").str.strip()
     df['Fuente de información'] = df['Fuente de información'].fillna("No Registrada").str.strip()
     df['Nivel de formación'] = df['Nivel de formación'].fillna("No Registrado").str.strip()

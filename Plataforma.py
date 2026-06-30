@@ -7,9 +7,6 @@ from datetime import datetime
 import base64
 import os
 
-# ==========================================
-# PAGE CONFIG & PROFESSIONAL THEMING
-# ==========================================
 st.set_page_config(
     page_title="Repositorio Educación",
     page_icon="🎓",
@@ -17,12 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom premium styling rules mimicking a white-label dashboard
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;700&display=swap');
 
-/* Global Font Override */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
@@ -32,12 +27,10 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
-/* Hide only the deploy button, options menu, and footer for a clean look */
 .stAppDeployButton {visibility: hidden !important; display: none !important;}
 #MainMenu {visibility: hidden !important;}
 footer {visibility: hidden !important;}
 
-/* Custom styled sidebar radio buttons as rounded rectangles */
 div[role="radiogroup"] {
     gap: 8px !important;
 }
@@ -65,7 +58,7 @@ div[role="radiogroup"] label[data-checked="true"] {
     box-shadow: 0 4px 12px rgba(11, 124, 140, 0.3) !important;
 }
 div[role="radiogroup"] label div[role="presentation"] {
-    display: none !important; /* Hide circular radio dot */
+    display: none !important;
 }
 div[role="radiogroup"] label p {
     color: inherit !important;
@@ -73,7 +66,6 @@ div[role="radiogroup"] label p {
     font-weight: 600 !important;
 }
 
-/* Rounded metrics cards styling with custom UCEVA gradient */
 .metric-card {
     background: linear-gradient(135deg, #0b7c8c 0%, #034b54 100%);
     border: 1px solid rgba(38, 212, 165, 0.25);
@@ -119,19 +111,14 @@ div[role="radiogroup"] label p {
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# DATA INGESTION & UCEVA LOGO LOAD
-# ==========================================
 from ETL_datos import load_and_clean_data, GSHEET_URL
 
-# Load clean data
 try:
     df_raw = load_and_clean_data()
 except Exception as e:
     st.error(f"Error al conectar con el repositorio de datos UCEVA: {e}")
     st.stop()
 
-# Banner Header styled using premium guidelines
 def render_header_banner():
     st.markdown(f"""
     <div style="background-color: #F0F2F6; padding: 22px 30px; border-radius: 16px; margin-bottom: 25px; border-left: 6px solid #0b7c8c; box-shadow: 0px 4px 6px rgba(0,0,0,0.03);">
@@ -151,7 +138,6 @@ def render_header_banner():
     </div>
     """, unsafe_allow_html=True)
 
-# Helper function to style Plotly charts matching UCEVA color theme
 def apply_plotly_theme(fig, title, height=350):
     fig.update_layout(
         title={
@@ -173,21 +159,15 @@ def apply_plotly_theme(fig, title, height=350):
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(11, 124, 140, 0.1)', zeroline=False)
     return fig
 
-# Custom sequential color palette matching the teal-to-mint watercolor gradient
 uceva_palette = ['#0b7c8c', '#149cae', '#26d4a5', '#55e3c0', '#8bf0d7']
 
-# ==========================================
-# SIDEBAR NAVIGATION
-# ==========================================
 st.sidebar.markdown("### 🎓 Repositorio Educación")
 st.sidebar.markdown("Navegación institucional:")
 
-# 1. Reset Filters Button
 if st.sidebar.button("🔄 Restablecer Filtros", use_container_width=True):
     st.session_state.clear()
     st.rerun()
 
-# 2. Sidebar Navigation options
 groups_list = sorted(df_raw['Grupo de Investigación Clean'].unique())
 navigation_options = [
     "📊 Vista General",
@@ -210,15 +190,11 @@ st.sidebar.link_button(
     use_container_width=True
 )
 
-# ==========================================
-# LOCAL PAGE FILTERS HELPER
-# ==========================================
 def render_page_filters(df, page_key, show_group_filter=True):
     with st.expander("🛠️ Filtros de Análisis", expanded=True):
         num_cols = 4 if show_group_filter else 3
         cols = st.columns(num_cols)
         
-        # 1. Years range slider
         years_available = sorted(df['Año Clean'].unique())
         valid_years = [y for y in years_available if 2018 <= y <= 2027]
         if not valid_years:
@@ -234,7 +210,6 @@ def render_page_filters(df, page_key, show_group_filter=True):
                 key=f"{page_key}_filter_years"
             )
             
-        # 2. Typology multi-select
         with cols[1]:
             typo_options = sorted(df['Tipología Clean'].unique())
             selected_typos = st.multiselect(
@@ -244,7 +219,6 @@ def render_page_filters(df, page_key, show_group_filter=True):
                 key=f"{page_key}_filter_typos"
             )
             
-        # 3. Program multi-select
         with cols[2]:
             prog_options = sorted(df['Programa'].unique())
             selected_progs = st.multiselect(
@@ -254,7 +228,6 @@ def render_page_filters(df, page_key, show_group_filter=True):
                 key=f"{page_key}_filter_progs"
             )
             
-        # 4. Group multi-select (optional)
         if show_group_filter:
             with cols[3]:
                 group_options = sorted(df['Grupo de Investigación Clean'].unique())
@@ -267,7 +240,6 @@ def render_page_filters(df, page_key, show_group_filter=True):
         else:
             selected_groups = None
             
-    # Apply filtering
     df_filtered = df[
         (df['Año Clean'] >= selected_years[0]) & 
         (df['Año Clean'] <= selected_years[1]) &
@@ -279,23 +251,13 @@ def render_page_filters(df, page_key, show_group_filter=True):
         
     return df_filtered
 
-# ==========================================
-# PAGE ROUTING & LAYOUTS
-# ==========================================
-
-# ------------------------------------------
-# PAGE 1: VISTA GENERAL
-# ------------------------------------------
 if selected_page == "📊 Vista General":
     render_header_banner()
-    
-    # Local Filters
     df_filtered = render_page_filters(df_raw, "vista_general", show_group_filter=True)
     
     if df_filtered.empty:
         st.warning("⚠️ No hay datos registrados con los filtros seleccionados.")
     else:
-        # KPI metrics
         col1, col2, col3, col4 = st.columns(4)
         total_products = len(df_filtered)
         total_groups = df_filtered['Grupo de Investigación Clean'].nunique()
@@ -314,7 +276,6 @@ if selected_page == "📊 Vista General":
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Plots
         row1_col1, row1_col2 = st.columns([3, 2])
         with row1_col1:
             trend_df = df_filtered.groupby(['Año Clean', 'Grupo de Investigación Clean']).size().reset_index(name='Cantidad')
@@ -367,13 +328,9 @@ if selected_page == "📊 Vista General":
             fig_sub.update_layout(yaxis={'categoryorder':'total ascending'}, coloraxis_showscale=False)
             st.plotly_chart(fig_sub, use_container_width=True)
 
-# ------------------------------------------
-# PAGE 2: EXPLORADOR DE PRODUCTOS
-# ------------------------------------------
 elif selected_page == "🔍 Explorador de Productos":
     st.markdown("## 🔍 Explorador y Buscador de Productos Científicos")
     
-    # Local Filters
     df_filtered = render_page_filters(df_raw, "explorador", show_group_filter=True)
     
     if df_filtered.empty:
@@ -459,13 +416,9 @@ elif selected_page == "🔍 Explorador de Productos":
                     if row_det['Enlace Clean']:
                         st.markdown(f"**Enlace Oficial:** [Ver publicación original ↗️]({row_det['Enlace Clean']})")
 
-# ------------------------------------------
-# PAGE 3: INVESTIGADORES Y COAUTORES
-# ------------------------------------------
 elif selected_page == "👥 Investigadores y Coautores":
     st.markdown("## 👥 Liderazgo y Participación de Investigadores")
     
-    # Local Filters
     df_filtered = render_page_filters(df_raw, "investigadores", show_group_filter=True)
     
     if df_filtered.empty:
@@ -511,24 +464,17 @@ elif selected_page == "👥 Investigadores y Coautores":
         else:
             st.info("ℹ️ No hay registros de coautores vinculados a los filtros seleccionados.")
 
-# ------------------------------------------
-# PAGES 4+: INDIVIDUAL RESEARCH GROUP DASHBOARD
-# ------------------------------------------
 elif selected_page.startswith("🏫 Grupo: "):
     group_name = selected_page.replace("🏫 Grupo: ", "")
     st.markdown(f"## 🏫 Dashboard Especializado del Grupo")
     st.markdown(f"### **{group_name}**")
     
-    # Filter raw data for this specific group first
     df_group_raw = df_raw[df_raw['Grupo de Investigación Clean'] == group_name]
-    
-    # Render local filters (group filter is false since we are in a single group dashboard)
     df_filtered = render_page_filters(df_group_raw, f"grupo_{group_name.replace(' ', '_')}", show_group_filter=False)
     
     if df_filtered.empty:
         st.warning("⚠️ No hay datos registrados con los filtros seleccionados para este grupo.")
     else:
-        # Group KPIs
         col1, col2, col3 = st.columns(3)
         total_products = len(df_filtered)
         all_authors_filtered = list(set([author for lst in df_filtered['Autores Lista'] for author in lst]))
@@ -544,7 +490,6 @@ elif selected_page.startswith("🏫 Grupo: "):
             
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Group charts
         col_g1, col_g2 = st.columns([3, 2])
         with col_g1:
             trend_df = df_filtered.groupby('Año Clean').size().reset_index(name='Cantidad')
@@ -571,7 +516,6 @@ elif selected_page.startswith("🏫 Grupo: "):
             fig_typo.update_layout(showlegend=False)
             st.plotly_chart(fig_typo, use_container_width=True)
             
-        # Leaderboard inside group
         st.markdown("---")
         st.markdown("#### Integrantes Más Activos del Grupo")
         flat_authors = [author for lst in df_filtered['Autores Lista'] for author in lst]
@@ -582,7 +526,6 @@ elif selected_page.startswith("🏫 Grupo: "):
         else:
             st.info("ℹ️ No hay registros de coautores vinculados a este grupo.")
             
-        # Latest publications table
         st.markdown("#### Publicaciones y Productos del Grupo")
         df_display = df_filtered[[
             'Título', 'Año Clean', 'Tipología Clean', 'Autores Texto', 'Fuente de información', 'Estado Clean', 'Enlace Clean'
